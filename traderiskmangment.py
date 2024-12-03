@@ -8,21 +8,18 @@ class BlackScholeForwardPrice:
 
     def __init__(self, trade_date: str, expiry_date: str, stock_price: float, strike_price: float, risk_free: float, sigma: float):
         """
-        Initialize the BlackScholeForwardPrice model with provide data trade and expiry dates, 
-        current stock price, strike price, risk-free rate, and volatility.
-
-        Parameters:
+        Input Parameters:
         trade_date (str): The date when the option is traded (YYYY-MM-DD).
         expiry_date (str): The expiry date of the option (YYYY-MM-DD).
         stock_price (float): Current stock price.
-        strike_price (float): Strike price of the option.
-        risk_free(float): Risk-free interest rate (as a decimal).
-        sigma (float): Volatility of the stock (as a decimal).
+        strike_price (float): Strike price.
+        risk_free(float): Risk-free rate .
+        sigma (float): The stock volatility .
         """
         self.trade_date = self._validate_date(trade_date, "trade_date")
         self.expiry_date = self._validate_date(expiry_date, "expiry_date")
-        self.stock_price = self._validate_float(stock_price, "Spot price (S)")
-        self.strike_price = self._validate_float(strike_price, "Exercise price (K)")
+        self.stock_price = self._validate_float(stock_price, "Stock price (S)")
+        self.strike_price = self._validate_float(strike_price, "Strike price (K)")
         self.risk_free = self._validate_float(risk_free, "Risk free rate (r)")
         self.sigma = self._validate_float(sigma, "sigma")
 
@@ -39,33 +36,33 @@ class BlackScholeForwardPrice:
             raise ValueError(f"{name} must be an integer or float")
         return value
 
-    def T(self):
-        """Calculate the time to expiry"""
+    def time_to_expiration(self):
+        """Calculation of the time to expiry."""
         return (self.expiry_date - self.trade_date).days / 365
 
-    def F(self):
-        """Calculate the forward price."""
-        return self.stock_price * np.exp(self.risk_free * self.T())
+    def forward_price(self):
+        """Calculate of the  forward price."""
+        return self.stock_price * np.exp(self.risk_free * self.time_to_expiration())
 
     def d1(self):
-        """Calculate d1 used in the Black-Scholes formula."""
-        return (np.log(self.F() / self.strike_price) + (self.sigma ** 2 / 2) * self.T()) / (self.sigma * np.sqrt(self.T()))
+        """Calculate d1 used in the Black-Scholes Solutuion."""
+        return (np.log(self.forward_price() / self.strike_price) + (self.sigma ** 2 / 2) * self.time_to_expiration()) / (self.sigma * np.sqrt(self.time_to_expiration()))
 
     def d2(self):
-        """Calculate d2 used in the Black-Scholes formula."""
-        return self.d1() - self.sigma * np.sqrt(self.T())
+        """Calculate d2 used in the Black-Scholes Solutuion."""
+        return self.d1() - self.sigma * np.sqrt(self.time_to_expiration())
 
-    def C(self):
+    def call_options(self):
         """Calculate the call option price."""
-        return np.exp(-self.risk_free * self.T()) * (self.F() * norm.cdf(self.d1()) - self.strike_price * norm.cdf(self.d2()))
+        return np.exp(-self.risk_free * self.time_to_expiration()) * (self.forward_price() * norm.cdf(self.d1()) - self.strike_price * norm.cdf(self.d2()))
 
-    def P(self):
+    def put_options(self):
         """Calculate the put option price."""
-        return self.C() - self.stock_price + self.strike_price * np.exp(-self.risk_free * self.T())
+        return self.call_options() - self.stock_price + self.strike_price * np.exp(-self.risk_free * self.time_to_expiration())
 
     def __str__(self) -> str:
-        return (f'Option Trading : \n trade_date: {self.trade_date} \n expiry_date: {self.expiry_date}\n spot_price: {self.stock_price}\nd1: {self.d1()} '
-                f'\nd2: {self.d2()} \n strike_price : {self.strike_price} \n call_price : {self.C()} \n put_price (P): {self.P()}')
+        return (f'Option Trading : \n trade_date: {self.trade_date} \n expiry_date: {self.expiry_date}\n forward_stock_price: {self.stock_price}\nd1: {self.d1()} '
+                f'\nd2: {self.d2()} \n strike_price : {self.strike_price} \n call_price_options : {self.call_options()} \n put_price_options : {self.put_options()}')
     
 
 class VaRCalculation:
@@ -102,15 +99,15 @@ class VaRCalculation:
     def total_pnl(self) -> np.array:
         return np.sort(self.pnl_vector(self.spot_price_1, self.market_rate_1) + self.pnl_vector(self.spot_price_2, self.market_rate_2))
 
-    def var_1d(self) -> float:
+    def var_cal_oneday(self) -> float:
         return (0.4 * self.total_pnl()[1]) + (0.6 * self.total_pnl()[2])
     
     def __str__(self) -> str:
-        return (f' spot_price_1: {self.spot_price_1}\n spot_price_2: {self.spot_price_2} \n VaR-One Day: {self.var_1d()}\n')
+        return (f' spot_price_1: {self.spot_price_1}\n spot_price_2: {self.spot_price_2} \n VaR-One Day: {self.var_cal_oneday()}\n')
 
 
 def import_excel_data() -> np.array:
-    df = pd.read_excel('/Users/aniruddhamacuser/Aniruddha/Project/LearningCode/excel/varcalulationdata.xlsx')
+    df = pd.read_excel('/Aniruddha/Project/excel/varcalulationdata.xlsx')
     ccy1 = np.array(df['market_rate_ccy1'].to_list())
     ccy2 = np.array(df['market_rate_ccy2'].to_list())
     return ccy1, ccy2
