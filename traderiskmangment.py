@@ -105,7 +105,7 @@ class VaRCalculation:
 
 
 def import_excel_data() -> np.array:
-    df = pd.read_excel('/Users/aniruddhamacuser/Aniruddha/Project/LearningCode/excel/varcalulationdata.xlsx')
+    df = pd.read_excel('excel/varcalulationdata.xlsx')
     ccy1 = np.array(df['market_rate_ccy1'].to_list())
     ccy2 = np.array(df['market_rate_ccy2'].to_list())
     return ccy1, ccy2
